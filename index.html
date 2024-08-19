@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylish Two-Player Chess Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 3px solid #34495e;
+            background-color: #ecf0f1;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 30px;
+        }
+
+        .white-square {
+            background-color: #f0d9b5;
+        }
+
+        .black-square {
+            background-color: #b58863;
+        }
+
+        .captured-pieces {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .captured-pieces h3 {
+            margin: 10px 0;
+            font-size: 20px;
+        }
+
+        .captured-pieces span {
+            font-size: 24px;
+            margin: 5px;
+        }
+
+        .game-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .game-buttons button {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .game-buttons button:hover {
+            background-color: #3498db;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        .selected {
+            border: 3px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="captured-pieces">
+            <h3>White Captures</h3>
+            <div id="white-captures"></div>
+        </div>
+        <div class="chessboard" id="chessboard"></div>
+        <div class="captured-pieces">
+            <h3>Black Captures</h3>
+            <div id="black-captures"></div>
+        </div>
+    </div>
+
+    <div class="game-buttons">
+        <button onclick="resetGame()">New Game</button>
+    </div>
+
+    <div class="status" id="status">Player 1 (White) to move</div>
+
+    <script>
+        const chessboard = document.getElementById('chessboard');
+        const whiteCaptures = document.getElementById('white-captures');
+        const blackCaptures = document.getElementById('black-captures');
+        const status = document.getElementById('status');
+
+        let board = [
+            ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+            ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        ];
+
+        let selectedSquare = null;
+        let isWhiteTurn = true;
+
+        function createChessboard() {
+            chessboard.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square', (row + col) % 2 === 0 ? 'white-square' : 'black-square');
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+
+                    if (board[row][col]) {
+                        square.textContent = board[row][col];
+                    }
+
+                    square.addEventListener('click', handleSquareClick);
+                    chessboard.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(event) {
+            const square = event.currentTarget;
+            const row = parseInt(square.dataset.row);
+            const col = parseInt(square.dataset.col);
+
+            if (selectedSquare) {
+                movePiece(selectedSquare, square);
+                selectedSquare = null;
+            } else if (square.textContent) {
+                if ((isWhiteTurn && square.textContent.match(/[♙♖♘♗♕♔]/)) || 
+                    (!isWhiteTurn && square.textContent.match(/[♟♜♞♝♛♚]/))) {
+                    selectedSquare = square;
+                    square.classList.add('selected');
+                }
+            }
+        }
+
+        function movePiece(fromSquare, toSquare) {
+            const piece = fromSquare.textContent;
+            const targetPiece = toSquare.textContent;
+
+            if (targetPiece) {
+                if (isWhiteTurn) {
+                    blackCaptures.innerHTML += `<span>${targetPiece}</span>`;
+                } else {
+                    whiteCaptures.innerHTML += `<span>${targetPiece}</span>`;
+                }
+            }
+
+            toSquare.textContent = piece;
+            fromSquare.classList.remove('selected');
+            fromSquare.textContent = '';
+
+            isWhiteTurn = !isWhiteTurn;
+            status.textContent = `Player ${isWhiteTurn ? '1 (White)' : '2 (Black)'} to move`;
+        }
+
+        function resetGame() {
+            board = [
+                ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+                ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+                ['', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+                ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+            ];
+            selectedSquare = null;
+            isWhiteTurn = true;
+            whiteCaptures.innerHTML = '';
+            blackCaptures.innerHTML = '';
+            status.textContent = 'Player 1 (White) to move';
+            createChessboard();
+        }
+
+        createChessboard();
+    </script>
+</body>
+</html>
